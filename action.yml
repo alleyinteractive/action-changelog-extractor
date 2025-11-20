@@ -1,0 +1,25 @@
+name: 'Changelog Extractor'
+description: 'Parse and extract structured information from Keep a Changelog formatted changelogs'
+author: 'Alley Interactive'
+
+branding:
+  icon: 'file-text'
+  color: 'blue'
+
+inputs:
+  changelog-path:
+    description: 'Path to the changelog file'
+    required: false
+    default: 'CHANGELOG.md'
+  version:
+    description: 'Version to extract (e.g., "1.14.0", "v1.14.0", or "latest")'
+    required: false
+    default: 'latest'
+
+outputs:
+  result:
+    description: 'JSON array of parsed changelog entries'
+
+runs:
+  using: 'node22'
+  main: 'src/index.js'
