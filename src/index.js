@@ -1,4 +1,3 @@
-const core = require('@actions/core');
 const fs = require('fs');
 const path = require('path');
 const { parseChangelog } = require('./parser');
@@ -6,7 +5,7 @@ const { parseChangelog } = require('./parser');
 /**
  * Main action entry point
  */
-async function run() {
+async function run(core) {
   try {
     // Get inputs
     const changelogPath = core.getInput('changelog-path') || 'CHANGELOG.md';
@@ -40,11 +39,6 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message);
   }
-}
-
-// Only run if this is the main module
-if (require.main === module) {
-  run();
 }
 
 module.exports = { run };
