@@ -11,19 +11,24 @@ const { parseChangelog } = require('./src/parser');
 
 function printUsage() {
   console.log(`
-Usage: node cli.js [changelog-file] [version]
+Usage: node cli.js [options] [changelog-file] [version]
+
+Options:
+  -l, --list     List the count of versions found and exit
+  -h, --help     Show this help message
 
 Arguments:
   changelog-file  Path to changelog file (default: CHANGELOG.md)
-  version        Version to extract (default: latest)
-                 Can be: "latest", "1.14.0", "v1.14.0", or null for all versions
+  version        Specific version to extract (e.g., "1.14.0" or "v1.14.0")
+                 Leave empty to return all versions (default: all versions)
 
 Examples:
-  node cli.js                           # Parse CHANGELOG.md, extract latest
-  node cli.js CHANGELOG.md latest       # Same as above
+  node cli.js                           # Parse CHANGELOG.md, extract all versions
+  node cli.js -l                        # Count versions in CHANGELOG.md
+  node cli.js CHANGELOG.md              # Same as above
   node cli.js CHANGELOG.md 1.14.0       # Extract specific version
-  node cli.js CHANGELOG.md all          # Extract all versions
-  node cli.js /tmp/test-changelog.md    # Parse specific file
+  node cli.js /tmp/test-changelog.md    # Parse specific file, all versions
+  node cli.js -l /tmp/test-changelog.md # Count versions in specific file
 `);
 }
 
@@ -35,9 +40,12 @@ if (args.includes('--help') || args.includes('-h')) {
   process.exit(0);
 }
 
-const changelogFile = args[0] || 'CHANGELOG.md';
-const versionArg = args[1] || 'latest';
-const version = versionArg === 'all' ? null : versionArg;
+const listMode = args.includes('-l') || args.includes('--list');
+const filteredArgs = args.filter(arg => arg !== '-l' && arg !== '--list');
+
+const changelogFile = filteredArgs[0] || 'CHANGELOG.md';
+const versionArg = filteredArgs[1] || null;
+const version = versionArg;
 
 // Read changelog file
 const changelogPath = path.resolve(process.cwd(), changelogFile);
@@ -50,13 +58,19 @@ if (!fs.existsSync(changelogPath)) {
 
 const changelogContent = fs.readFileSync(changelogPath, 'utf8');
 
-// Parse changelog
-console.log(`📖 Parsing: ${changelogPath}`);
-console.log(`🎯 Version: ${versionArg}`);
-console.log('');
-
 try {
   const results = parseChangelog(changelogContent, version);
+
+  // List mode: just display count and exit
+  if (listMode) {
+    console.log(`${results.length}`);
+    process.exit(0);
+  }
+
+  // Parse changelog
+  console.log(`📖 Parsing: ${changelogPath}`);
+  console.log(`🎯 Version: ${versionArg || 'all versions'}`);
+  console.log('');
 
   if (results.length === 0) {
     console.log('⚠️  No changelog entries found');

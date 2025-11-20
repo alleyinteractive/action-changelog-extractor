@@ -5,14 +5,41 @@ A GitHub Action that parses [Keep a Changelog](https://keepachangelog.com/) form
 ## Features
 
 - 📝 Parses Keep a Changelog format (like [Mantle Framework](https://github.com/alleyinteractive/mantle-framework))
-- 🎯 Extract specific versions or the latest release
+- 🎯 Extract all versions or a specific version
 - 📦 Returns structured data with sections (Added, Changed, Fixed, etc.)
+- 🔄 Supports mixed formats (with and without subsections)
 - ✅ Comprehensive Jest test suite
 - 🚀 Zero build step - pure JavaScript
 
 ## Usage
 
-### Basic Example
+### Extract All Versions
+
+By default, the action returns all versions in the changelog:
+
+```yaml
+- name: Extract All Changelog Entries
+  id: changelog
+  uses: alleyinteractive/action-changelog-extractor@v1
+
+- name: Process All Versions
+  run: |
+    # Access the first (latest) version
+    echo '${{ fromJson(steps.changelog.outputs.result)[0].contents }}'
+```
+
+### Extract Specific Version
+
+```yaml
+- name: Extract v1.14.0 Changelog
+  id: changelog
+  uses: alleyinteractive/action-changelog-extractor@v1
+  with:
+    changelog-path: 'CHANGELOG.md'
+    version: '1.14.0'  # or 'v1.14.0'
+```
+
+### Create Release from Latest Version
 
 ```yaml
 name: Release
@@ -30,8 +57,6 @@ jobs:
       - name: Extract Changelog
         id: changelog
         uses: alleyinteractive/action-changelog-extractor@v1
-        with:
-          version: 'latest'
 
       - name: Create Release
         uses: actions/create-release@v1
@@ -40,34 +65,8 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
+          # Use the first (latest) version from the changelog
           body: ${{ fromJson(steps.changelog.outputs.result)[0].contents }}
-```
-
-### Extract Specific Version
-
-```yaml
-- name: Extract v1.14.0 Changelog
-  id: changelog
-  uses: alleyinteractive/action-changelog-extractor@v1
-  with:
-    changelog-path: 'CHANGELOG.md'
-    version: '1.14.0'  # or 'v1.14.0'
-```
-
-### Use Individual Sections
-
-```yaml
-- name: Extract Changelog
-  id: changelog
-  uses: alleyinteractive/action-changelog-extractor@v1
-
-- name: Process Sections
-  run: |
-    echo "Added features:"
-    echo '${{ fromJson(steps.changelog.outputs.result)[0].sections.added }}'
-
-    echo "Bug fixes:"
-    echo '${{ fromJson(steps.changelog.outputs.result)[0].sections.fixed }}'
 ```
 
 ## Inputs
@@ -75,7 +74,7 @@ jobs:
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `changelog-path` | Path to the changelog file | No | `CHANGELOG.md` |
-| `version` | Version to extract (`latest`, `1.14.0`, or `v1.14.0`) | No | `latest` |
+| `version` | Specific version to extract (e.g., `1.14.0` or `v1.14.0`). Leave empty to return all versions. | No | _(returns all)_ |
 
 ## Outputs
 

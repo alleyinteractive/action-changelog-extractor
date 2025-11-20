@@ -9,7 +9,10 @@ async function run(core) {
   try {
     // Get inputs
     const changelogPath = core.getInput('changelog-path') || 'CHANGELOG.md';
-    const version = core.getInput('version') || 'latest';
+    const versionInput = core.getInput('version');
+
+    // Only pass version if explicitly specified, otherwise return all versions
+    const version = versionInput || null;
 
     // Read changelog file
     const fullPath = path.resolve(process.cwd(), changelogPath);
@@ -24,7 +27,7 @@ async function run(core) {
     const results = parseChangelog(changelogContent, version);
 
     if (results.length === 0) {
-      core.warning(`No changelog entries found${version !== 'latest' ? ` for version ${version}` : ''}`);
+      core.warning(`No changelog entries found${version ? ` for version ${version}` : ''}`);
     }
 
     // Set output as JSON string

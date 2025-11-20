@@ -78,10 +78,10 @@ describe('parseChangelog', () => {
       expect(results[5].name).toBe('1.13.0');
     });
 
-    test('extracts latest version', () => {
-      const results = parseChangelog(sampleChangelog, 'latest');
+    test('extracts all versions by default', () => {
+      const results = parseChangelog(sampleChangelog);
 
-      expect(results).toHaveLength(1);
+      expect(results).toHaveLength(6);
       expect(results[0].name).toBe('1.14.0');
     });
 
@@ -232,7 +232,7 @@ describe('parseChangelog', () => {
 
   describe('output structure', () => {
     test('each result has required properties', () => {
-      const results = parseChangelog(sampleChangelog, 'latest');
+      const results = parseChangelog(sampleChangelog, '1.14.0');
 
       expect(results[0]).toHaveProperty('name');
       expect(results[0]).toHaveProperty('sections');
@@ -240,20 +240,20 @@ describe('parseChangelog', () => {
     });
 
     test('name is a string', () => {
-      const results = parseChangelog(sampleChangelog, 'latest');
+      const results = parseChangelog(sampleChangelog, '1.14.0');
 
       expect(typeof results[0].name).toBe('string');
     });
 
     test('sections is an object', () => {
-      const results = parseChangelog(sampleChangelog, 'latest');
+      const results = parseChangelog(sampleChangelog, '1.14.0');
 
       expect(typeof results[0].sections).toBe('object');
       expect(Array.isArray(results[0].sections)).toBe(false);
     });
 
     test('contents is a string', () => {
-      const results = parseChangelog(sampleChangelog, 'latest');
+      const results = parseChangelog(sampleChangelog, '1.14.0');
 
       expect(typeof results[0].contents).toBe('string');
     });

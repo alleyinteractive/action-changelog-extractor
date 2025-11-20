@@ -12,9 +12,8 @@ inputs:
     required: false
     default: 'CHANGELOG.md'
   version:
-    description: 'Version to extract (e.g., "1.14.0", "v1.14.0", or "latest")'
+    description: 'Specific version to extract (e.g., "1.14.0" or "v1.14.0"). Leave empty to return all versions.'
     required: false
-    default: 'latest'
 
 outputs:
   result:

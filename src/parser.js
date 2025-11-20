@@ -2,10 +2,10 @@
  * Parse a Keep a Changelog formatted changelog file.
  *
  * @param {string} changelogContent - The raw markdown content of the changelog
- * @param {string|null} version - Specific version to extract (e.g., "v1.14.0" or "1.14.0"), or "latest" for most recent
+ * @param {string|null} version - Specific version to extract (e.g., "v1.14.0" or "1.14.0"), or null/undefined for all versions
  * @returns {Array<{name: string, sections: Object, contents: string}>} Array of version objects
  */
-function parseChangelog(changelogContent, version = 'latest') {
+function parseChangelog(changelogContent, version = null) {
   const versions = [];
   const lines = changelogContent.split('\n');
 
@@ -145,18 +145,14 @@ function parseChangelog(changelogContent, version = 'latest') {
     ver.contents = contentParts.join('\n\n');
   }
 
-  // Filter by version if specified
-  if (version && version !== 'latest') {
+  // Filter by specific version if requested
+  if (version) {
     const normalizedVersion = version.replace(/^v/, ''); // Remove 'v' prefix if present
     const filtered = versions.filter(v => v.name === normalizedVersion);
     return filtered;
   }
 
-  // Return latest version if requested
-  if (version === 'latest' && versions.length > 0) {
-    return [versions[0]];
-  }
-
+  // Return all versions by default
   return versions;
 }
 
