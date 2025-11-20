@@ -147,14 +147,16 @@ describe('parseChangelog', () => {
     test('handles version with no sections', () => {
       const results = parseChangelog(sampleChangelog, '1.13.3');
 
-      expect(results[0].sections).toEqual({});
+      expect(results[0].sections.general).toBeDefined();
+      expect(results[0].sections.general).toContain('No changes, re-released to fix a bad tag');
     });
 
     test('handles version with content but no section headers', () => {
       const results = parseChangelog(sampleChangelog, '1.13.4');
 
-      // Content without section headers should not be captured
-      expect(Object.keys(results[0].sections)).toHaveLength(0);
+      // Content without section headers should be in general section
+      expect(results[0].sections.general).toBeDefined();
+      expect(results[0].sections.general).toContain('symfony/http-foundation');
     });
   });
 
@@ -178,10 +180,11 @@ describe('parseChangelog', () => {
       expect(results[0].contents).toContain('Post meta is no longer unregistered');
     });
 
-    test('contents is empty for version with no sections', () => {
+    test('contents includes general section for version without subsections', () => {
       const results = parseChangelog(sampleChangelog, '1.13.3');
 
-      expect(results[0].contents).toBe('');
+      expect(results[0].contents).toBeTruthy();
+      expect(results[0].contents).toContain('No changes, re-released to fix a bad tag');
     });
 
     test('sections maintain markdown formatting', () => {
@@ -253,6 +256,116 @@ describe('parseChangelog', () => {
       const results = parseChangelog(sampleChangelog, 'latest');
 
       expect(typeof results[0].contents).toBe('string');
+    });
+  });
+
+  describe('mixed format support', () => {
+    const mixedChangelog = `# Changelog
+
+## 3.9.1
+
+### Added
+
+* Feature A with subsection
+* Feature B with subsection
+
+### Changed
+
+* Change with subsection
+
+### Fixed
+
+* Fix with subsection
+
+## 3.9.0
+
+* Added support for something without subsections.
+
+## 3.8.0
+
+### Changed
+
+* Only has a changed section
+
+## 3.7.0
+
+* Single line without subsection
+
+## 3.6.0
+
+### Added
+
+* Has an added section
+
+### Fixed
+
+* Also has a fixed section
+`;
+
+    test('handles version with only general content (no subsections)', () => {
+      const results = parseChangelog(mixedChangelog, '3.9.0');
+
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toBe('3.9.0');
+      expect(results[0].sections.general).toBeDefined();
+      expect(results[0].sections.general).toContain('Added support for something without subsections');
+    });
+
+    test('handles version with mixed subsections and general content', () => {
+      const results = parseChangelog(mixedChangelog, '3.9.1');
+
+      expect(results).toHaveLength(1);
+      expect(results[0].sections.added).toBeDefined();
+      expect(results[0].sections.changed).toBeDefined();
+      expect(results[0].sections.fixed).toBeDefined();
+      expect(results[0].sections.general).toBeUndefined();
+    });
+
+    test('general section is included in contents', () => {
+      const results = parseChangelog(mixedChangelog, '3.9.0');
+
+      expect(results[0].contents).toBeTruthy();
+      expect(results[0].contents).toContain('Added support for something without subsections');
+      expect(results[0].contents).not.toContain('### General');
+    });
+
+    test('general section appears without header in contents', () => {
+      const results = parseChangelog(mixedChangelog, '3.7.0');
+
+      expect(results[0].sections.general).toBeDefined();
+      expect(results[0].contents).toBe('* Single line without subsection');
+    });
+
+    test('extracts all versions with mixed formats', () => {
+      const results = parseChangelog(mixedChangelog, null);
+
+      expect(results).toHaveLength(5);
+
+      // 3.9.1 has subsections
+      expect(results[0].sections.added).toBeDefined();
+      expect(results[0].sections.general).toBeUndefined();
+
+      // 3.9.0 has only general content
+      expect(results[1].sections.general).toBeDefined();
+      expect(Object.keys(results[1].sections)).toEqual(['general']);
+
+      // 3.8.0 has only changed subsection
+      expect(results[2].sections.changed).toBeDefined();
+      expect(results[2].sections.general).toBeUndefined();
+
+      // 3.7.0 has only general content
+      expect(results[3].sections.general).toBeDefined();
+
+      // 3.6.0 has subsections
+      expect(results[4].sections.added).toBeDefined();
+      expect(results[4].sections.fixed).toBeDefined();
+    });
+
+    test('general content preserves formatting', () => {
+      const results = parseChangelog(mixedChangelog, '3.9.0');
+
+      expect(results[0].sections.general).toContain('*');
+      expect(results[0].sections.general.trim()).toBe('* Added support for something without subsections.');
     });
   });
 });
