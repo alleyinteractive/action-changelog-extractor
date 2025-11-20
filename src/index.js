@@ -41,4 +41,4 @@ async function run(core) {
   }
 }
 
-module.exports = { run };
+module.exports = run;
