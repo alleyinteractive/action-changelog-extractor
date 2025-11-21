@@ -11,11 +11,13 @@ This package is published to NPM as `@alleyinteractive/changelog-extractor`.
 ## Publishing Steps
 
 1. Update the version in `package.json`:
+
    ```bash
    npm version patch  # or minor, or major
    ```
 
 2. Publish to NPM:
+
    ```bash
    npm publish --access public
    ```
@@ -40,4 +42,5 @@ changelog-extractor
 
 ## GitHub Action
 
-The GitHub Action in this repository will continue to work alongside the NPM package. The action uses the parser from `src/parser.js` directly.
+The GitHub Action in this repository will continue to work alongside the NPM
+package. The action uses the parser from `src/parser.js` directly.

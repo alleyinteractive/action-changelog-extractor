@@ -1,4 +1,4 @@
-const { parseChangelog } = require('../src/parser');
+const { parseChangelog } = require('../src/parser')
 
 // Sample changelog content based on Mantle Framework format
 const sampleChangelog = `# Changelog
@@ -62,202 +62,220 @@ No changes, re-released to fix a bad tag.
 ### Fixed
 
 - Fixed issue where \`Mantle\\Types\\Validator\` is used within \`mantle-framework/support\` but \`mantle-framework/types\` is not a dependency.
-`;
+`
 
 describe('parseChangelog', () => {
   describe('version extraction', () => {
     test('extracts all versions when no version specified', () => {
-      const results = parseChangelog(sampleChangelog, null);
+      const results = parseChangelog(sampleChangelog, null)
 
-      expect(results).toHaveLength(6);
-      expect(results[0].name).toBe('1.14.0');
-      expect(results[1].name).toBe('1.13.4');
-      expect(results[2].name).toBe('1.13.3');
-      expect(results[3].name).toBe('1.13.2');
-      expect(results[4].name).toBe('1.13.1');
-      expect(results[5].name).toBe('1.13.0');
-    });
+      expect(results).toHaveLength(6)
+      expect(results[0].name).toBe('1.14.0')
+      expect(results[1].name).toBe('1.13.4')
+      expect(results[2].name).toBe('1.13.3')
+      expect(results[3].name).toBe('1.13.2')
+      expect(results[4].name).toBe('1.13.1')
+      expect(results[5].name).toBe('1.13.0')
+    })
 
     test('extracts all versions by default', () => {
-      const results = parseChangelog(sampleChangelog);
+      const results = parseChangelog(sampleChangelog)
 
-      expect(results).toHaveLength(6);
-      expect(results[0].name).toBe('1.14.0');
-    });
+      expect(results).toHaveLength(6)
+      expect(results[0].name).toBe('1.14.0')
+    })
 
     test('extracts specific version without v prefix', () => {
-      const results = parseChangelog(sampleChangelog, '1.13.2');
+      const results = parseChangelog(sampleChangelog, '1.13.2')
 
-      expect(results).toHaveLength(1);
-      expect(results[0].name).toBe('1.13.2');
-    });
+      expect(results).toHaveLength(1)
+      expect(results[0].name).toBe('1.13.2')
+    })
 
     test('extracts specific version with v prefix', () => {
-      const results = parseChangelog(sampleChangelog, 'v1.13.2');
+      const results = parseChangelog(sampleChangelog, 'v1.13.2')
 
-      expect(results).toHaveLength(1);
-      expect(results[0].name).toBe('1.13.2');
-    });
+      expect(results).toHaveLength(1)
+      expect(results[0].name).toBe('1.13.2')
+    })
 
     test('returns empty array for non-existent version', () => {
-      const results = parseChangelog(sampleChangelog, '99.99.99');
+      const results = parseChangelog(sampleChangelog, '99.99.99')
 
-      expect(results).toHaveLength(0);
-    });
+      expect(results).toHaveLength(0)
+    })
 
     test('version name does not include v prefix', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].name).toBe('1.14.0');
-      expect(results[0].name).not.toContain('v');
-    });
-  });
+      expect(results[0].name).toBe('1.14.0')
+      expect(results[0].name).not.toContain('v')
+    })
+  })
 
   describe('section parsing', () => {
     test('parses Added section correctly', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].sections.added).toBeDefined();
-      expect(results[0].sections.added).toContain('laravel/serializable-closure');
-      expect(results[0].sections.added).toContain('Mantle\\Types\\Validator');
-    });
+      expect(results[0].sections.added).toBeDefined()
+      expect(results[0].sections.added).toContain(
+        'laravel/serializable-closure'
+      )
+      expect(results[0].sections.added).toContain('Mantle\\Types\\Validator')
+    })
 
     test('parses Changed section correctly', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].sections.changed).toBeDefined();
-      expect(results[0].sections.changed).toContain('PHPUnit version');
-      expect(results[0].sections.changed).toContain('📌 Potentially breaking change');
-    });
+      expect(results[0].sections.changed).toBeDefined()
+      expect(results[0].sections.changed).toContain('PHPUnit version')
+      expect(results[0].sections.changed).toContain(
+        '📌 Potentially breaking change'
+      )
+    })
 
     test('parses Fixed section correctly', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].sections.fixed).toBeDefined();
-      expect(results[0].sections.fixed).toContain('Post meta is no longer unregistered');
-      expect(results[0].sections.fixed).toContain('PHPStan level 8');
-    });
+      expect(results[0].sections.fixed).toBeDefined()
+      expect(results[0].sections.fixed).toContain(
+        'Post meta is no longer unregistered'
+      )
+      expect(results[0].sections.fixed).toContain('PHPStan level 8')
+    })
 
     test('section keys are lowercase', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(Object.keys(results[0].sections)).toEqual(['added', 'changed', 'fixed']);
-    });
+      expect(Object.keys(results[0].sections)).toEqual([
+        'added',
+        'changed',
+        'fixed'
+      ])
+    })
 
     test('handles version with no sections', () => {
-      const results = parseChangelog(sampleChangelog, '1.13.3');
+      const results = parseChangelog(sampleChangelog, '1.13.3')
 
-      expect(results[0].sections.general).toBeDefined();
-      expect(results[0].sections.general).toContain('No changes, re-released to fix a bad tag');
-    });
+      expect(results[0].sections.general).toBeDefined()
+      expect(results[0].sections.general).toContain(
+        'No changes, re-released to fix a bad tag'
+      )
+    })
 
     test('handles version with content but no section headers', () => {
-      const results = parseChangelog(sampleChangelog, '1.13.4');
+      const results = parseChangelog(sampleChangelog, '1.13.4')
 
       // Content without section headers should be in general section
-      expect(results[0].sections.general).toBeDefined();
-      expect(results[0].sections.general).toContain('symfony/http-foundation');
-    });
-  });
+      expect(results[0].sections.general).toBeDefined()
+      expect(results[0].sections.general).toContain('symfony/http-foundation')
+    })
+  })
 
   describe('contents generation', () => {
     test('contents includes all sections without version header', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].contents).toBeDefined();
-      expect(results[0].contents).toContain('### Added');
-      expect(results[0].contents).toContain('### Changed');
-      expect(results[0].contents).toContain('### Fixed');
-      expect(results[0].contents).not.toContain('## v1.14.0');
-      expect(results[0].contents).not.toContain('## 1.14.0');
-    });
+      expect(results[0].contents).toBeDefined()
+      expect(results[0].contents).toContain('### Added')
+      expect(results[0].contents).toContain('### Changed')
+      expect(results[0].contents).toContain('### Fixed')
+      expect(results[0].contents).not.toContain('## v1.14.0')
+      expect(results[0].contents).not.toContain('## 1.14.0')
+    })
 
     test('contents combines all section content', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].contents).toContain('laravel/serializable-closure');
-      expect(results[0].contents).toContain('PHPUnit version');
-      expect(results[0].contents).toContain('Post meta is no longer unregistered');
-    });
+      expect(results[0].contents).toContain('laravel/serializable-closure')
+      expect(results[0].contents).toContain('PHPUnit version')
+      expect(results[0].contents).toContain(
+        'Post meta is no longer unregistered'
+      )
+    })
 
     test('contents includes general section for version without subsections', () => {
-      const results = parseChangelog(sampleChangelog, '1.13.3');
+      const results = parseChangelog(sampleChangelog, '1.13.3')
 
-      expect(results[0].contents).toBeTruthy();
-      expect(results[0].contents).toContain('No changes, re-released to fix a bad tag');
-    });
+      expect(results[0].contents).toBeTruthy()
+      expect(results[0].contents).toContain(
+        'No changes, re-released to fix a bad tag'
+      )
+    })
 
     test('sections maintain markdown formatting', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].contents).toContain('- Added');
-      expect(results[0].contents).toContain('**Bumped minimum PHPUnit version');
-    });
-  });
+      expect(results[0].contents).toContain('- Added')
+      expect(results[0].contents).toContain('**Bumped minimum PHPUnit version')
+    })
+  })
 
   describe('edge cases', () => {
     test('handles empty changelog', () => {
-      const results = parseChangelog('', 'latest');
+      const results = parseChangelog('', 'latest')
 
-      expect(results).toHaveLength(0);
-    });
+      expect(results).toHaveLength(0)
+    })
 
     test('handles changelog with only header', () => {
-      const changelog = '# Changelog\n\nSome intro text.';
-      const results = parseChangelog(changelog, 'latest');
+      const changelog = '# Changelog\n\nSome intro text.'
+      const results = parseChangelog(changelog, 'latest')
 
-      expect(results).toHaveLength(0);
-    });
+      expect(results).toHaveLength(0)
+    })
 
     test('handles version with date suffix', () => {
-      const results = parseChangelog(sampleChangelog, '1.13.1');
+      const results = parseChangelog(sampleChangelog, '1.13.1')
 
-      expect(results).toHaveLength(1);
-      expect(results[0].name).toBe('1.13.1');
-    });
+      expect(results).toHaveLength(1)
+      expect(results[0].name).toBe('1.13.1')
+    })
 
     test('handles multiple versions with same sections', () => {
-      const results = parseChangelog(sampleChangelog, null);
+      const results = parseChangelog(sampleChangelog, null)
 
-      const versionsWithFixed = results.filter(v => v.sections.fixed);
-      expect(versionsWithFixed.length).toBeGreaterThan(1);
-    });
+      const versionsWithFixed = results.filter((v) => v.sections.fixed)
+      expect(versionsWithFixed.length).toBeGreaterThan(1)
+    })
 
     test('preserves multiline content within sections', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0].sections.changed).toContain('New projects should not pin a version');
-    });
-  });
+      expect(results[0].sections.changed).toContain(
+        'New projects should not pin a version'
+      )
+    })
+  })
 
   describe('output structure', () => {
     test('each result has required properties', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(results[0]).toHaveProperty('name');
-      expect(results[0]).toHaveProperty('sections');
-      expect(results[0]).toHaveProperty('contents');
-    });
+      expect(results[0]).toHaveProperty('name')
+      expect(results[0]).toHaveProperty('sections')
+      expect(results[0]).toHaveProperty('contents')
+    })
 
     test('name is a string', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(typeof results[0].name).toBe('string');
-    });
+      expect(typeof results[0].name).toBe('string')
+    })
 
     test('sections is an object', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(typeof results[0].sections).toBe('object');
-      expect(Array.isArray(results[0].sections)).toBe(false);
-    });
+      expect(typeof results[0].sections).toBe('object')
+      expect(Array.isArray(results[0].sections)).toBe(false)
+    })
 
     test('contents is a string', () => {
-      const results = parseChangelog(sampleChangelog, '1.14.0');
+      const results = parseChangelog(sampleChangelog, '1.14.0')
 
-      expect(typeof results[0].contents).toBe('string');
-    });
-  });
+      expect(typeof results[0].contents).toBe('string')
+    })
+  })
 
   describe('mixed format support', () => {
     const mixedChangelog = `# Changelog
@@ -300,72 +318,78 @@ describe('parseChangelog', () => {
 ### Fixed
 
 * Also has a fixed section
-`;
+`
 
     test('handles version with only general content (no subsections)', () => {
-      const results = parseChangelog(mixedChangelog, '3.9.0');
+      const results = parseChangelog(mixedChangelog, '3.9.0')
 
-      expect(results).toHaveLength(1);
-      expect(results[0].name).toBe('3.9.0');
-      expect(results[0].sections.general).toBeDefined();
-      expect(results[0].sections.general).toContain('Added support for something without subsections');
-    });
+      expect(results).toHaveLength(1)
+      expect(results[0].name).toBe('3.9.0')
+      expect(results[0].sections.general).toBeDefined()
+      expect(results[0].sections.general).toContain(
+        'Added support for something without subsections'
+      )
+    })
 
     test('handles version with mixed subsections and general content', () => {
-      const results = parseChangelog(mixedChangelog, '3.9.1');
+      const results = parseChangelog(mixedChangelog, '3.9.1')
 
-      expect(results).toHaveLength(1);
-      expect(results[0].sections.added).toBeDefined();
-      expect(results[0].sections.changed).toBeDefined();
-      expect(results[0].sections.fixed).toBeDefined();
-      expect(results[0].sections.general).toBeUndefined();
-    });
+      expect(results).toHaveLength(1)
+      expect(results[0].sections.added).toBeDefined()
+      expect(results[0].sections.changed).toBeDefined()
+      expect(results[0].sections.fixed).toBeDefined()
+      expect(results[0].sections.general).toBeUndefined()
+    })
 
     test('general section is included in contents', () => {
-      const results = parseChangelog(mixedChangelog, '3.9.0');
+      const results = parseChangelog(mixedChangelog, '3.9.0')
 
-      expect(results[0].contents).toBeTruthy();
-      expect(results[0].contents).toContain('Added support for something without subsections');
-      expect(results[0].contents).not.toContain('### General');
-    });
+      expect(results[0].contents).toBeTruthy()
+      expect(results[0].contents).toContain(
+        'Added support for something without subsections'
+      )
+      expect(results[0].contents).not.toContain('### General')
+    })
 
     test('general section appears without header in contents', () => {
-      const results = parseChangelog(mixedChangelog, '3.7.0');
+      const results = parseChangelog(mixedChangelog, '3.7.0')
 
-      expect(results[0].sections.general).toBeDefined();
-      expect(results[0].contents).toBe('* Single line without subsection');
-    });
+      expect(results[0].sections.general).toBeDefined()
+      expect(results[0].contents).toBe('* Single line without subsection')
+    })
 
     test('extracts all versions with mixed formats', () => {
-      const results = parseChangelog(mixedChangelog, null);
+      const results = parseChangelog(mixedChangelog, null)
 
-      expect(results).toHaveLength(5);
+      expect(results).toHaveLength(5)
 
       // 3.9.1 has subsections
-      expect(results[0].sections.added).toBeDefined();
-      expect(results[0].sections.general).toBeUndefined();
+      expect(results[0].sections.added).toBeDefined()
+      expect(results[0].sections.general).toBeUndefined()
 
       // 3.9.0 has only general content
-      expect(results[1].sections.general).toBeDefined();
-      expect(Object.keys(results[1].sections)).toEqual(['general']);
+      expect(results[1].sections.general).toBeDefined()
+      expect(Object.keys(results[1].sections)).toEqual(['general'])
 
       // 3.8.0 has only changed subsection
-      expect(results[2].sections.changed).toBeDefined();
-      expect(results[2].sections.general).toBeUndefined();
+      expect(results[2].sections.changed).toBeDefined()
+      expect(results[2].sections.general).toBeUndefined()
 
       // 3.7.0 has only general content
-      expect(results[3].sections.general).toBeDefined();
+      expect(results[3].sections.general).toBeDefined()
 
       // 3.6.0 has subsections
-      expect(results[4].sections.added).toBeDefined();
-      expect(results[4].sections.fixed).toBeDefined();
-    });
+      expect(results[4].sections.added).toBeDefined()
+      expect(results[4].sections.fixed).toBeDefined()
+    })
 
     test('general content preserves formatting', () => {
-      const results = parseChangelog(mixedChangelog, '3.9.0');
+      const results = parseChangelog(mixedChangelog, '3.9.0')
 
-      expect(results[0].sections.general).toContain('*');
-      expect(results[0].sections.general.trim()).toBe('* Added support for something without subsections.');
-    });
-  });
-});
+      expect(results[0].sections.general).toContain('*')
+      expect(results[0].sections.general.trim()).toBe(
+        '* Added support for something without subsections.'
+      )
+    })
+  })
+})
