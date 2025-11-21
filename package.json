@@ -1,6 +1,6 @@
 {
   "name": "@alleyinteractive/changelog-extractor",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "Parse and extract structured information from Keep a Changelog formatted changelogs",
   "main": "src/parser.js",
