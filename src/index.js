@@ -4,6 +4,8 @@ const { parseChangelog } = require('./parser');
 
 /**
  * Main action entry point
+ *
+ * @param {import('@actions/core')} core
  */
 async function run(core) {
   try {
@@ -44,4 +46,11 @@ async function run(core) {
   }
 }
 
+// Only run if this is the main module (for GitHub Actions)
+if (require.main === module) {
+  const core = require('@actions/core');
+  run(core);
+}
+
 module.exports = run;
+

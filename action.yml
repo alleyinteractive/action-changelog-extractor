@@ -18,19 +18,7 @@ inputs:
 outputs:
   result:
     description: 'JSON array of parsed changelog entries'
-    value: ${{ steps.changelog-extractor.outputs.result }}
-
-# runs:
-#   using: 'node24'
-#   main: 'src/index.js'
 
 runs:
-  using: 'composite'
-  steps:
-    - name: Get WordPress Versions
-      id: changelog-extractor
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const run = require('${{github.action_path}}/src/index.js');
-          await run(core);
+  using: 'node20'
+  main: 'dist/index.js'
