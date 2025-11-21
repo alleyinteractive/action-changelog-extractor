@@ -1,4 +1,4 @@
-const { parseChangelog } = require('../src/parser')
+import { parseChangelog } from '../src/parser.js'
 
 // Sample changelog content based on Mantle Framework format
 const sampleChangelog = `# Changelog

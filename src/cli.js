@@ -13,7 +13,7 @@
 
 import fs from 'fs'
 import path from 'path'
-import { parseChangelog } from './src/parser.js'
+import { parseChangelog } from './parser.js'
 
 function printUsage() {
   console.log(`
