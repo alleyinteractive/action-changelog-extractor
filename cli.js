@@ -1,34 +1,38 @@
 #!/usr/bin/env node
 
+/**
+ * Changelog Extractor CLI
+ *
+ * Parse and extract structured information from Keep a Changelog formatted files.
+ * Can be run via npx or installed globally.
+ *
+ * @package @alleyinteractive/changelog-extractor
+ * @author Alley Interactive
+ * @license GPL-3.0
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { parseChangelog } = require('./src/parser');
 
-/**
- * CLI for testing the changelog parser
- * Usage: node cli.js [changelog-file] [version]
- */
-
 function printUsage() {
   console.log(`
-Usage: node cli.js [options] [changelog-file] [version]
+Usage: npx @alleyinteractive/changelog-extractor [options]
 
 Options:
-  -l, --list     List the count of versions found and exit
-  -h, --help     Show this help message
-
-Arguments:
-  changelog-file  Path to changelog file (default: CHANGELOG.md)
-  version        Specific version to extract (e.g., "1.14.0" or "v1.14.0")
-                 Leave empty to return all versions (default: all versions)
+  -f, --file <path>     Path to changelog file (default: CHANGELOG.md)
+  -v, --version <ver>   Specific version to extract (e.g., "1.14.0" or "v1.14.0")
+                        Leave empty to return all versions
+  -l, --list            List the count of versions found and exit
+  -h, --help            Show this help message
 
 Examples:
-  node cli.js                           # Parse CHANGELOG.md, extract all versions
-  node cli.js -l                        # Count versions in CHANGELOG.md
-  node cli.js CHANGELOG.md              # Same as above
-  node cli.js CHANGELOG.md 1.14.0       # Extract specific version
-  node cli.js /tmp/test-changelog.md    # Parse specific file, all versions
-  node cli.js -l /tmp/test-changelog.md # Count versions in specific file
+  npx @alleyinteractive/changelog-extractor                      # Parse CHANGELOG.md, all versions
+  npx @alleyinteractive/changelog-extractor -l                   # Count versions in CHANGELOG.md
+  npx @alleyinteractive/changelog-extractor -v 1.14.0            # Extract specific version
+  npx @alleyinteractive/changelog-extractor -f /tmp/test.md      # Parse specific file
+  npx @alleyinteractive/changelog-extractor -f CHANGELOG.md -v 1.14.0  # Both options
+  changelog-extractor -l                                         # If installed globally
 `);
 }
 
@@ -41,10 +45,21 @@ if (args.includes('--help') || args.includes('-h')) {
 }
 
 const listMode = args.includes('-l') || args.includes('--list');
-const filteredArgs = args.filter(arg => arg !== '-l' && arg !== '--list');
 
-const changelogFile = filteredArgs[0] || 'CHANGELOG.md';
-const versionArg = filteredArgs[1] || null;
+// Parse file option
+let changelogFile = 'CHANGELOG.md';
+const fileIndex = args.findIndex(arg => arg === '-f' || arg === '--file');
+if (fileIndex !== -1 && args[fileIndex + 1]) {
+  changelogFile = args[fileIndex + 1];
+}
+
+// Parse version option
+let versionArg = null;
+const versionIndex = args.findIndex(arg => arg === '-v' || arg === '--version');
+if (versionIndex !== -1 && args[versionIndex + 1]) {
+  versionArg = args[versionIndex + 1];
+}
+
 const version = versionArg;
 
 // Read changelog file
@@ -74,7 +89,7 @@ try {
 
   if (results.length === 0) {
     console.log('⚠️  No changelog entries found');
-    process.exit(0);
+    process.exit(1);
   }
 
   console.log(`✅ Found ${results.length} version(s)\n`);

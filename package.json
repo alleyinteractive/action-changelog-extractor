@@ -1,21 +1,47 @@
 {
-  "name": "action-changelog-extractor",
-  "version": "1.0.0",
-  "description": "GitHub Action to parse and extract changelog information",
-  "main": "src/index.js",
+  "name": "@alleyinteractive/changelog-extractor",
+  "version": "0.0.1",
+  "description": "Parse and extract structured information from Keep a Changelog formatted changelogs",
+  "main": "src/parser.js",
+  "bin": {
+    "changelog-extractor": "./cli.js"
+  },
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "prepublishOnly": "npm test",
+    "release:patch": "npm run version:patch && npm publish --access public && git push --follow-tags",
+    "release:minor": "npm run version:minor && npm publish --access public && git push --follow-tags",
+    "release:major": "npm run version:major && npm publish --access public && git push --follow-tags"
   },
   "keywords": [
-    "github-action",
     "changelog",
     "parser",
-    "release-notes"
+    "keep-a-changelog",
+    "release-notes",
+    "github-action",
+    "cli"
   ],
   "author": "Alley Interactive",
   "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alleyinteractive/action-changelog-extractor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alleyinteractive/action-changelog-extractor/issues"
+  },
+  "homepage": "https://github.com/alleyinteractive/action-changelog-extractor#readme",
+  "files": [
+    "src/",
+    "cli.js",
+    "README.md",
+    "LICENSE"
+  ],
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.24",

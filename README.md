@@ -1,17 +1,23 @@
-# Changelog Extractor Action
+# Changelog Extractor
 
-A GitHub Action that parses [Keep a Changelog](https://keepachangelog.com/) formatted changelog files and extracts structured version information for use in release workflows and other automation.
+Parse and extract structured information from [Keep a
+Changelog](https://keepachangelog.com/) formatted changelogs. Available as both
+a **GitHub Action** and a **CLI tool**.
 
 ## Features
 
-- 📝 Parses Keep a Changelog format (like [Mantle Framework](https://github.com/alleyinteractive/mantle-framework))
-- 🎯 Extract all versions or a specific version
-- 📦 Returns structured data with sections (Added, Changed, Fixed, etc.)
-- 🔄 Supports mixed formats (with and without subsections)
-- ✅ Comprehensive Jest test suite
-- 🚀 Zero build step - pure JavaScript
+- Parses Keep a Changelog format (tested with [Mantle Framework](https://github.com/alleyinteractive/mantle-framework) and others)
+- Extract all versions or filter to a specific one
+- Returns structured data with sections (Added, Changed, Fixed, etc.)
+- Handles mixed formats, including versions without subsections
+- Available as a CLI tool via npx or as a GitHub Action
+- Written in plain JavaScript with no build step required
 
 ## Usage
+
+### As a GitHub Action
+
+#### Extract All Versions
 
 ### Extract All Versions
 
@@ -69,20 +75,20 @@ jobs:
           body: ${{ fromJson(steps.changelog.outputs.result)[0].contents }}
 ```
 
-## Inputs
+#### Action Inputs
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `changelog-path` | Path to the changelog file | No | `CHANGELOG.md` |
 | `version` | Specific version to extract (e.g., `1.14.0` or `v1.14.0`). Leave empty to return all versions. | No | _(returns all)_ |
 
-## Outputs
+#### Action Outputs
 
 | Output | Description |
 |--------|-------------|
 | `result` | JSON string containing array of parsed version objects |
 
-### Output Structure
+#### Output Structure
 
 The `result` output is a JSON string that can be parsed with `fromJson()`:
 
@@ -104,6 +110,31 @@ The `result` output is a JSON string that can be parsed with `fromJson()`:
 - `name` - Version number without "v" prefix
 - `sections` - Object with lowercase keys (`added`, `changed`, `fixed`, `deprecated`, `removed`, `security`)
 - `contents` - Full markdown content for the version (all sections combined, without version header)
+
+### As a CLI Tool
+
+Run directly with npx (no installation required):
+
+```bash
+# Extract all versions from CHANGELOG.md
+npx @alleyinteractive/changelog-extractor
+
+# Extract specific version
+npx @alleyinteractive/changelog-extractor CHANGELOG.md 1.14.0
+
+# Count versions
+npx @alleyinteractive/changelog-extractor -l
+
+# Show help
+npx @alleyinteractive/changelog-extractor --help
+```
+
+Or install globally:
+
+```bash
+npm install -g @alleyinteractive/changelog-extractor
+changelog-extractor
+```
 
 ## Supported Changelog Format
 
@@ -137,6 +168,40 @@ This action parses changelogs following the [Keep a Changelog](https://keepachan
 - Fixed
 - Security
 
+## CLI Options
+
+```
+Usage: changelog-extractor [options] [changelog-file] [version]
+
+Options:
+  -l, --list     List the count of versions found and exit
+  -h, --help     Show help message
+
+Arguments:
+  changelog-file  Path to changelog file (default: CHANGELOG.md)
+  version        Specific version to extract (e.g., "1.14.0" or "v1.14.0")
+                 Leave empty to return all versions
+```
+
+## Programmatic Usage
+
+You can also use the parser directly in your Node.js code:
+
+```javascript
+const { parseChangelog } = require('@alleyinteractive/changelog-extractor');
+const fs = require('fs');
+
+const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+
+// Get all versions
+const allVersions = parseChangelog(changelog);
+
+// Get specific version
+const v1 = parseChangelog(changelog, '1.14.0');
+
+console.log(JSON.stringify(allVersions, null, 2));
+```
+
 ## Development
 
 ### Prerequisites
@@ -163,27 +228,25 @@ npm run test:coverage
 npm run test:watch
 ```
 
-### Testing Locally
+### Local Testing
 
-You can test the parser directly:
-
-```javascript
-const { parseChangelog } = require('./src/parser');
-const fs = require('fs');
-
-const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
-const results = parseChangelog(changelog, 'latest');
-console.log(JSON.stringify(results, null, 2));
+```bash
+# Test the CLI locally
+node cli.js
+node cli.js -l
+node cli.js CHANGELOG.md 1.0.0
 ```
 
-## License
+## Changelog
 
-GPL-3.0 - see [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
 ## Credits
 
-Maintained by [Alley Interactive](https://github.com/alleyinteractive).
+This project is actively maintained by [Alley Interactive](https://github.com/alleyinteractive).
+
+- [Sean Fisher](https://github.com/srtfisher)
+
+## License
+
+The GNU General Public License (GPL) license. Please see [License File](LICENSE) for more information.
