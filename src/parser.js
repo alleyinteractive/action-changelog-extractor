@@ -5,7 +5,7 @@
  * @param {string|null} version - Specific version to extract (e.g., "v1.14.0" or "1.14.0"), or null/undefined for all versions
  * @returns {Array<{name: string, sections: Object, contents: string}>} Array of version objects
  */
-function parseChangelog(changelogContent, version = null) {
+export function parseChangelog(changelogContent, version = null) {
   const versions = []
   const lines = changelogContent.split('\n')
 
@@ -175,5 +175,3 @@ function parseChangelog(changelogContent, version = null) {
   // Return all versions by default
   return versions
 }
-
-module.exports = { parseChangelog }

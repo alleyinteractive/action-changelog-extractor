@@ -11,9 +11,9 @@
  * @license GPL-3.0
  */
 
-const fs = require('fs')
-const path = require('path')
-const { parseChangelog } = require('./src/parser')
+import fs from 'fs'
+import path from 'path'
+import { parseChangelog } from './src/parser.js'
 
 function printUsage() {
   console.log(`

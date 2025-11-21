@@ -27253,189 +27253,176 @@ var coreExports = requireCore();
  * @param {string|null} version - Specific version to extract (e.g., "v1.14.0" or "1.14.0"), or null/undefined for all versions
  * @returns {Array<{name: string, sections: Object, contents: string}>} Array of version objects
  */
+function parseChangelog(changelogContent, version = null) {
+  const versions = [];
+  const lines = changelogContent.split('\n');
 
-var parser;
-var hasRequiredParser;
+  let currentVersion = null;
+  let currentSection = null;
+  let currentSectionContent = [];
+  let generalContent = []; // Content without section headers
 
-function requireParser () {
-	if (hasRequiredParser) return parser;
-	hasRequiredParser = 1;
-	function parseChangelog(changelogContent, version = null) {
-	  const versions = [];
-	  const lines = changelogContent.split('\n');
+  // Regex to match version headers: ## v1.14.0 or ## v1.14.0 - 2024-04-29
+  const versionRegex = /^##\s+v?(\d+\.\d+\.\d+(?:-[^\s]+)?)\s*(?:-\s*(.*))?$/;
+  // Regex to match section headers: ### Added, ### Changed, etc.
+  const sectionRegex = /^###\s+(.+)$/;
 
-	  let currentVersion = null;
-	  let currentSection = null;
-	  let currentSectionContent = [];
-	  let generalContent = []; // Content without section headers
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
-	  // Regex to match version headers: ## v1.14.0 or ## v1.14.0 - 2024-04-29
-	  const versionRegex = /^##\s+v?(\d+\.\d+\.\d+(?:-[^\s]+)?)\s*(?:-\s*(.*))?$/;
-	  // Regex to match section headers: ### Added, ### Changed, etc.
-	  const sectionRegex = /^###\s+(.+)$/;
+    // Check for version header
+    const versionMatch = line.match(versionRegex);
+    if (versionMatch) {
+      // Save previous version if exists
+      if (currentVersion) {
+        saveCurrentSection();
+        saveGeneralContent();
+        versions.push(currentVersion);
+      }
 
-	  for (let i = 0; i < lines.length; i++) {
-	    const line = lines[i];
+      // Start new version
+      currentVersion = {
+        name: versionMatch[1], // Version without 'v' prefix
+        sections: {},
+        contents: ''
+      };
+      currentSection = null;
+      currentSectionContent = [];
+      generalContent = [];
+      continue
+    }
 
-	    // Check for version header
-	    const versionMatch = line.match(versionRegex);
-	    if (versionMatch) {
-	      // Save previous version if exists
-	      if (currentVersion) {
-	        saveCurrentSection();
-	        saveGeneralContent();
-	        versions.push(currentVersion);
-	      }
+    // Check for section header
+    const sectionMatch = line.match(sectionRegex);
+    if (sectionMatch && currentVersion) {
+      // If we have general content, save it before starting a new section
+      if (generalContent.length > 0) {
+        saveGeneralContent();
+      }
 
-	      // Start new version
-	      currentVersion = {
-	        name: versionMatch[1], // Version without 'v' prefix
-	        sections: {},
-	        contents: ''
-	      };
-	      currentSection = null;
-	      currentSectionContent = [];
-	      generalContent = [];
-	      continue
-	    }
+      // Save previous section if exists
+      saveCurrentSection();
 
-	    // Check for section header
-	    const sectionMatch = line.match(sectionRegex);
-	    if (sectionMatch && currentVersion) {
-	      // If we have general content, save it before starting a new section
-	      if (generalContent.length > 0) {
-	        saveGeneralContent();
-	      }
+      // Start new section
+      currentSection = sectionMatch[1].toLowerCase();
+      currentSectionContent = [];
+      continue
+    }
 
-	      // Save previous section if exists
-	      saveCurrentSection();
+    // Add content to current section or general content
+    if (currentVersion) {
+      if (currentSection) {
+        currentSectionContent.push(line);
+      } else {
+        // Content without a section header goes to general
+        generalContent.push(line);
+      }
+    }
+  }
 
-	      // Start new section
-	      currentSection = sectionMatch[1].toLowerCase();
-	      currentSectionContent = [];
-	      continue
-	    }
+  // Save final version and section
+  if (currentVersion) {
+    saveCurrentSection();
+    saveGeneralContent();
+    versions.push(currentVersion);
+  }
 
-	    // Add content to current section or general content
-	    if (currentVersion) {
-	      if (currentSection) {
-	        currentSectionContent.push(line);
-	      } else {
-	        // Content without a section header goes to general
-	        generalContent.push(line);
-	      }
-	    }
-	  }
+  // Helper function to save the current section
+  function saveCurrentSection() {
+    if (currentVersion && currentSection && currentSectionContent.length > 0) {
+      // Trim empty lines from start and end
+      while (
+        currentSectionContent.length > 0 &&
+        currentSectionContent[0].trim() === ''
+      ) {
+        currentSectionContent.shift();
+      }
+      while (
+        currentSectionContent.length > 0 &&
+        currentSectionContent[currentSectionContent.length - 1].trim() === ''
+      ) {
+        currentSectionContent.pop();
+      }
 
-	  // Save final version and section
-	  if (currentVersion) {
-	    saveCurrentSection();
-	    saveGeneralContent();
-	    versions.push(currentVersion);
-	  }
+      const content = currentSectionContent.join('\n');
+      if (content.trim()) {
+        currentVersion.sections[currentSection] = content;
+      }
+    }
+  }
 
-	  // Helper function to save the current section
-	  function saveCurrentSection() {
-	    if (currentVersion && currentSection && currentSectionContent.length > 0) {
-	      // Trim empty lines from start and end
-	      while (
-	        currentSectionContent.length > 0 &&
-	        currentSectionContent[0].trim() === ''
-	      ) {
-	        currentSectionContent.shift();
-	      }
-	      while (
-	        currentSectionContent.length > 0 &&
-	        currentSectionContent[currentSectionContent.length - 1].trim() === ''
-	      ) {
-	        currentSectionContent.pop();
-	      }
+  // Helper function to save general content (content without section headers)
+  function saveGeneralContent() {
+    if (currentVersion && generalContent.length > 0) {
+      // Trim empty lines from start and end
+      let trimmedContent = [...generalContent];
+      while (trimmedContent.length > 0 && trimmedContent[0].trim() === '') {
+        trimmedContent.shift();
+      }
+      while (
+        trimmedContent.length > 0 &&
+        trimmedContent[trimmedContent.length - 1].trim() === ''
+      ) {
+        trimmedContent.pop();
+      }
 
-	      const content = currentSectionContent.join('\n');
-	      if (content.trim()) {
-	        currentVersion.sections[currentSection] = content;
-	      }
-	    }
-	  }
+      const content = trimmedContent.join('\n');
+      if (content.trim()) {
+        currentVersion.sections['general'] = content;
+      }
+      generalContent = [];
+    }
+  }
 
-	  // Helper function to save general content (content without section headers)
-	  function saveGeneralContent() {
-	    if (currentVersion && generalContent.length > 0) {
-	      // Trim empty lines from start and end
-	      let trimmedContent = [...generalContent];
-	      while (trimmedContent.length > 0 && trimmedContent[0].trim() === '') {
-	        trimmedContent.shift();
-	      }
-	      while (
-	        trimmedContent.length > 0 &&
-	        trimmedContent[trimmedContent.length - 1].trim() === ''
-	      ) {
-	        trimmedContent.pop();
-	      }
+  // Build contents for each version (all sections combined)
+  for (const ver of versions) {
+    const contentParts = [];
 
-	      const content = trimmedContent.join('\n');
-	      if (content.trim()) {
-	        currentVersion.sections['general'] = content;
-	      }
-	      generalContent = [];
-	    }
-	  }
+    // Order sections in conventional order, with general at the end
+    const sectionOrder = [
+      'added',
+      'changed',
+      'deprecated',
+      'removed',
+      'fixed',
+      'security'
+    ];
 
-	  // Build contents for each version (all sections combined)
-	  for (const ver of versions) {
-	    const contentParts = [];
+    for (const sectionName of sectionOrder) {
+      if (ver.sections[sectionName]) {
+        contentParts.push(
+          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${ver.sections[sectionName]}`
+        );
+      }
+    }
 
-	    // Order sections in conventional order, with general at the end
-	    const sectionOrder = [
-	      'added',
-	      'changed',
-	      'deprecated',
-	      'removed',
-	      'fixed',
-	      'security'
-	    ];
+    // Add any sections not in the standard order (except 'general')
+    for (const [sectionName, sectionContent] of Object.entries(ver.sections)) {
+      if (!sectionOrder.includes(sectionName) && sectionName !== 'general') {
+        contentParts.push(
+          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${sectionContent}`
+        );
+      }
+    }
 
-	    for (const sectionName of sectionOrder) {
-	      if (ver.sections[sectionName]) {
-	        contentParts.push(
-	          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${ver.sections[sectionName]}`
-	        );
-	      }
-	    }
+    // Add general section last if it exists (without a header since it's raw content)
+    if (ver.sections['general']) {
+      contentParts.push(ver.sections['general']);
+    }
 
-	    // Add any sections not in the standard order (except 'general')
-	    for (const [sectionName, sectionContent] of Object.entries(ver.sections)) {
-	      if (!sectionOrder.includes(sectionName) && sectionName !== 'general') {
-	        contentParts.push(
-	          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${sectionContent}`
-	        );
-	      }
-	    }
+    ver.contents = contentParts.join('\n\n');
+  }
 
-	    // Add general section last if it exists (without a header since it's raw content)
-	    if (ver.sections['general']) {
-	      contentParts.push(ver.sections['general']);
-	    }
+  // Filter by specific version if requested
+  if (version) {
+    const normalizedVersion = version.replace(/^v/, ''); // Remove 'v' prefix if present
+    const filtered = versions.filter((v) => v.name === normalizedVersion);
+    return filtered
+  }
 
-	    ver.contents = contentParts.join('\n\n');
-	  }
-
-	  // Filter by specific version if requested
-	  if (version) {
-	    const normalizedVersion = version.replace(/^v/, ''); // Remove 'v' prefix if present
-	    const filtered = versions.filter((v) => v.name === normalizedVersion);
-	    return filtered
-	  }
-
-	  // Return all versions by default
-	  return versions
-	}
-
-	parser = { parseChangelog };
-	return parser;
+  // Return all versions by default
+  return versions
 }
-
-var parserExports = requireParser();
 
 /**
  * Main action entry point
@@ -27458,7 +27445,7 @@ async function run() {
     const changelogContent = require$$1.readFileSync(fullPath, 'utf8');
 
     // Parse changelog
-    const results = parserExports.parseChangelog(changelogContent, version);
+    const results = parseChangelog(changelogContent, version);
 
     if (results.length === 0) {
       coreExports.warning(
@@ -27488,6 +27475,5 @@ async function run() {
  * main logic.
  */
 
-/* istanbul ignore next */
 run();
 //# sourceMappingURL=index.js.map

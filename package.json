@@ -1,6 +1,7 @@
 {
   "name": "@alleyinteractive/changelog-extractor",
   "version": "0.0.1",
+  "type": "module",
   "description": "Parse and extract structured information from Keep a Changelog formatted changelogs",
   "main": "src/parser.js",
   "bin": {
@@ -8,6 +9,7 @@
   },
   "scripts": {
     "build": "npm run prettier && npm run package",
+    "fix-and-build": "npm run prettier:fix && npm run package",
     "package:watch": "npm run package -- --watch",
     "package": "npx rollup --config rollup.config.js",
     "prepublishOnly": "npm test",
@@ -49,6 +51,9 @@
     "README.md",
     "LICENSE"
   ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
