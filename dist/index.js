@@ -1,7 +1,7 @@
-import require$$1 from 'fs';
-import require$$1$5 from 'path';
 import require$$0 from 'os';
 import require$$0$1 from 'crypto';
+import require$$1 from 'fs';
+import require$$1$5 from 'path';
 import require$$2 from 'http';
 import require$$3 from 'https';
 import require$$0$4 from 'net';
@@ -29,201 +29,6 @@ import require$$2$2 from 'child_process';
 import require$$6$1 from 'timers';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-function getDefaultExportFromCjs (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-
-var src = {exports: {}};
-
-/**
- * Parse a Keep a Changelog formatted changelog file.
- *
- * @param {string} changelogContent - The raw markdown content of the changelog
- * @param {string|null} version - Specific version to extract (e.g., "v1.14.0" or "1.14.0"), or null/undefined for all versions
- * @returns {Array<{name: string, sections: Object, contents: string}>} Array of version objects
- */
-
-var parser;
-var hasRequiredParser;
-
-function requireParser () {
-	if (hasRequiredParser) return parser;
-	hasRequiredParser = 1;
-	function parseChangelog(changelogContent, version = null) {
-	  const versions = [];
-	  const lines = changelogContent.split('\n');
-
-	  let currentVersion = null;
-	  let currentSection = null;
-	  let currentSectionContent = [];
-	  let generalContent = []; // Content without section headers
-
-	  // Regex to match version headers: ## v1.14.0 or ## v1.14.0 - 2024-04-29
-	  const versionRegex = /^##\s+v?(\d+\.\d+\.\d+(?:-[^\s]+)?)\s*(?:-\s*(.*))?$/;
-	  // Regex to match section headers: ### Added, ### Changed, etc.
-	  const sectionRegex = /^###\s+(.+)$/;
-
-	  for (let i = 0; i < lines.length; i++) {
-	    const line = lines[i];
-
-	    // Check for version header
-	    const versionMatch = line.match(versionRegex);
-	    if (versionMatch) {
-	      // Save previous version if exists
-	      if (currentVersion) {
-	        saveCurrentSection();
-	        saveGeneralContent();
-	        versions.push(currentVersion);
-	      }
-
-	      // Start new version
-	      currentVersion = {
-	        name: versionMatch[1], // Version without 'v' prefix
-	        sections: {},
-	        contents: ''
-	      };
-	      currentSection = null;
-	      currentSectionContent = [];
-	      generalContent = [];
-	      continue
-	    }
-
-	    // Check for section header
-	    const sectionMatch = line.match(sectionRegex);
-	    if (sectionMatch && currentVersion) {
-	      // If we have general content, save it before starting a new section
-	      if (generalContent.length > 0) {
-	        saveGeneralContent();
-	      }
-
-	      // Save previous section if exists
-	      saveCurrentSection();
-
-	      // Start new section
-	      currentSection = sectionMatch[1].toLowerCase();
-	      currentSectionContent = [];
-	      continue
-	    }
-
-	    // Add content to current section or general content
-	    if (currentVersion) {
-	      if (currentSection) {
-	        currentSectionContent.push(line);
-	      } else {
-	        // Content without a section header goes to general
-	        generalContent.push(line);
-	      }
-	    }
-	  }
-
-	  // Save final version and section
-	  if (currentVersion) {
-	    saveCurrentSection();
-	    saveGeneralContent();
-	    versions.push(currentVersion);
-	  }
-
-	  // Helper function to save the current section
-	  function saveCurrentSection() {
-	    if (currentVersion && currentSection && currentSectionContent.length > 0) {
-	      // Trim empty lines from start and end
-	      while (
-	        currentSectionContent.length > 0 &&
-	        currentSectionContent[0].trim() === ''
-	      ) {
-	        currentSectionContent.shift();
-	      }
-	      while (
-	        currentSectionContent.length > 0 &&
-	        currentSectionContent[currentSectionContent.length - 1].trim() === ''
-	      ) {
-	        currentSectionContent.pop();
-	      }
-
-	      const content = currentSectionContent.join('\n');
-	      if (content.trim()) {
-	        currentVersion.sections[currentSection] = content;
-	      }
-	    }
-	  }
-
-	  // Helper function to save general content (content without section headers)
-	  function saveGeneralContent() {
-	    if (currentVersion && generalContent.length > 0) {
-	      // Trim empty lines from start and end
-	      let trimmedContent = [...generalContent];
-	      while (trimmedContent.length > 0 && trimmedContent[0].trim() === '') {
-	        trimmedContent.shift();
-	      }
-	      while (
-	        trimmedContent.length > 0 &&
-	        trimmedContent[trimmedContent.length - 1].trim() === ''
-	      ) {
-	        trimmedContent.pop();
-	      }
-
-	      const content = trimmedContent.join('\n');
-	      if (content.trim()) {
-	        currentVersion.sections['general'] = content;
-	      }
-	      generalContent = [];
-	    }
-	  }
-
-	  // Build contents for each version (all sections combined)
-	  for (const ver of versions) {
-	    const contentParts = [];
-
-	    // Order sections in conventional order, with general at the end
-	    const sectionOrder = [
-	      'added',
-	      'changed',
-	      'deprecated',
-	      'removed',
-	      'fixed',
-	      'security'
-	    ];
-
-	    for (const sectionName of sectionOrder) {
-	      if (ver.sections[sectionName]) {
-	        contentParts.push(
-	          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${ver.sections[sectionName]}`
-	        );
-	      }
-	    }
-
-	    // Add any sections not in the standard order (except 'general')
-	    for (const [sectionName, sectionContent] of Object.entries(ver.sections)) {
-	      if (!sectionOrder.includes(sectionName) && sectionName !== 'general') {
-	        contentParts.push(
-	          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${sectionContent}`
-	        );
-	      }
-	    }
-
-	    // Add general section last if it exists (without a header since it's raw content)
-	    if (ver.sections['general']) {
-	      contentParts.push(ver.sections['general']);
-	    }
-
-	    ver.contents = contentParts.join('\n\n');
-	  }
-
-	  // Filter by specific version if requested
-	  if (version) {
-	    const normalizedVersion = version.replace(/^v/, ''); // Remove 'v' prefix if present
-	    const filtered = versions.filter((v) => v.name === normalizedVersion);
-	    return filtered
-	  }
-
-	  // Return all versions by default
-	  return versions
-	}
-
-	parser = { parseChangelog };
-	return parser;
-}
 
 var core = {};
 
@@ -27439,78 +27244,250 @@ function requireCore () {
 	return core;
 }
 
-var hasRequiredSrc;
+var coreExports = requireCore();
 
-function requireSrc () {
-	if (hasRequiredSrc) return src.exports;
-	hasRequiredSrc = 1;
-	(function (module) {
-		const fs = require$$1;
-		const path = require$$1$5;
-		const { parseChangelog } = requireParser();
+/**
+ * Parse a Keep a Changelog formatted changelog file.
+ *
+ * @param {string} changelogContent - The raw markdown content of the changelog
+ * @param {string|null} version - Specific version to extract (e.g., "v1.14.0" or "1.14.0"), or null/undefined for all versions
+ * @returns {Array<{name: string, sections: Object, contents: string}>} Array of version objects
+ */
 
-		/**
-		 * Main action entry point
-		 *
-		 * @param {import('@actions/core')} core
-		 */
-		async function run(core) {
-		  try {
-		    // Get inputs
-		    const changelogPath = core.getInput('changelog-path') || 'CHANGELOG.md';
-		    const versionInput = core.getInput('version');
+var parser;
+var hasRequiredParser;
 
-		    // Only pass version if explicitly specified, otherwise return all versions
-		    const version = versionInput || null;
+function requireParser () {
+	if (hasRequiredParser) return parser;
+	hasRequiredParser = 1;
+	function parseChangelog(changelogContent, version = null) {
+	  const versions = [];
+	  const lines = changelogContent.split('\n');
 
-		    // Read changelog file
-		    const fullPath = path.resolve(process.cwd(), changelogPath);
+	  let currentVersion = null;
+	  let currentSection = null;
+	  let currentSectionContent = [];
+	  let generalContent = []; // Content without section headers
 
-		    if (!fs.existsSync(fullPath)) {
-		      throw new Error(`Changelog file not found: ${fullPath}`)
-		    }
+	  // Regex to match version headers: ## v1.14.0 or ## v1.14.0 - 2024-04-29
+	  const versionRegex = /^##\s+v?(\d+\.\d+\.\d+(?:-[^\s]+)?)\s*(?:-\s*(.*))?$/;
+	  // Regex to match section headers: ### Added, ### Changed, etc.
+	  const sectionRegex = /^###\s+(.+)$/;
 
-		    const changelogContent = fs.readFileSync(fullPath, 'utf8');
+	  for (let i = 0; i < lines.length; i++) {
+	    const line = lines[i];
 
-		    // Parse changelog
-		    const results = parseChangelog(changelogContent, version);
+	    // Check for version header
+	    const versionMatch = line.match(versionRegex);
+	    if (versionMatch) {
+	      // Save previous version if exists
+	      if (currentVersion) {
+	        saveCurrentSection();
+	        saveGeneralContent();
+	        versions.push(currentVersion);
+	      }
 
-		    if (results.length === 0) {
-		      core.warning(
-		        `No changelog entries found${version ? ` for version ${version}` : ''}`
-		      );
-		    }
+	      // Start new version
+	      currentVersion = {
+	        name: versionMatch[1], // Version without 'v' prefix
+	        sections: {},
+	        contents: ''
+	      };
+	      currentSection = null;
+	      currentSectionContent = [];
+	      generalContent = [];
+	      continue
+	    }
 
-		    // Set output as JSON string
-		    core.setOutput('result', JSON.stringify(results));
+	    // Check for section header
+	    const sectionMatch = line.match(sectionRegex);
+	    if (sectionMatch && currentVersion) {
+	      // If we have general content, save it before starting a new section
+	      if (generalContent.length > 0) {
+	        saveGeneralContent();
+	      }
 
-		    // Log summary
-		    core.info(
-		      `Parsed ${results.length} changelog ${results.length === 1 ? 'entry' : 'entries'}`
-		    );
-		    for (const entry of results) {
-		      core.info(
-		        `  - Version ${entry.name}: ${Object.keys(entry.sections).length} sections`
-		      );
-		    }
-		  } catch (error) {
-		    core.setFailed(error.message);
-		  }
-		}
+	      // Save previous section if exists
+	      saveCurrentSection();
 
-		// Only run if this is the main module (for GitHub Actions)
-		if (require.main === module) {
-		  const core = requireCore();
-		  run(core);
-		}
+	      // Start new section
+	      currentSection = sectionMatch[1].toLowerCase();
+	      currentSectionContent = [];
+	      continue
+	    }
 
-		module.exports = run; 
-	} (src));
-	return src.exports;
+	    // Add content to current section or general content
+	    if (currentVersion) {
+	      if (currentSection) {
+	        currentSectionContent.push(line);
+	      } else {
+	        // Content without a section header goes to general
+	        generalContent.push(line);
+	      }
+	    }
+	  }
+
+	  // Save final version and section
+	  if (currentVersion) {
+	    saveCurrentSection();
+	    saveGeneralContent();
+	    versions.push(currentVersion);
+	  }
+
+	  // Helper function to save the current section
+	  function saveCurrentSection() {
+	    if (currentVersion && currentSection && currentSectionContent.length > 0) {
+	      // Trim empty lines from start and end
+	      while (
+	        currentSectionContent.length > 0 &&
+	        currentSectionContent[0].trim() === ''
+	      ) {
+	        currentSectionContent.shift();
+	      }
+	      while (
+	        currentSectionContent.length > 0 &&
+	        currentSectionContent[currentSectionContent.length - 1].trim() === ''
+	      ) {
+	        currentSectionContent.pop();
+	      }
+
+	      const content = currentSectionContent.join('\n');
+	      if (content.trim()) {
+	        currentVersion.sections[currentSection] = content;
+	      }
+	    }
+	  }
+
+	  // Helper function to save general content (content without section headers)
+	  function saveGeneralContent() {
+	    if (currentVersion && generalContent.length > 0) {
+	      // Trim empty lines from start and end
+	      let trimmedContent = [...generalContent];
+	      while (trimmedContent.length > 0 && trimmedContent[0].trim() === '') {
+	        trimmedContent.shift();
+	      }
+	      while (
+	        trimmedContent.length > 0 &&
+	        trimmedContent[trimmedContent.length - 1].trim() === ''
+	      ) {
+	        trimmedContent.pop();
+	      }
+
+	      const content = trimmedContent.join('\n');
+	      if (content.trim()) {
+	        currentVersion.sections['general'] = content;
+	      }
+	      generalContent = [];
+	    }
+	  }
+
+	  // Build contents for each version (all sections combined)
+	  for (const ver of versions) {
+	    const contentParts = [];
+
+	    // Order sections in conventional order, with general at the end
+	    const sectionOrder = [
+	      'added',
+	      'changed',
+	      'deprecated',
+	      'removed',
+	      'fixed',
+	      'security'
+	    ];
+
+	    for (const sectionName of sectionOrder) {
+	      if (ver.sections[sectionName]) {
+	        contentParts.push(
+	          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${ver.sections[sectionName]}`
+	        );
+	      }
+	    }
+
+	    // Add any sections not in the standard order (except 'general')
+	    for (const [sectionName, sectionContent] of Object.entries(ver.sections)) {
+	      if (!sectionOrder.includes(sectionName) && sectionName !== 'general') {
+	        contentParts.push(
+	          `### ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}\n\n${sectionContent}`
+	        );
+	      }
+	    }
+
+	    // Add general section last if it exists (without a header since it's raw content)
+	    if (ver.sections['general']) {
+	      contentParts.push(ver.sections['general']);
+	    }
+
+	    ver.contents = contentParts.join('\n\n');
+	  }
+
+	  // Filter by specific version if requested
+	  if (version) {
+	    const normalizedVersion = version.replace(/^v/, ''); // Remove 'v' prefix if present
+	    const filtered = versions.filter((v) => v.name === normalizedVersion);
+	    return filtered
+	  }
+
+	  // Return all versions by default
+	  return versions
+	}
+
+	parser = { parseChangelog };
+	return parser;
 }
 
-var srcExports = requireSrc();
-var index = /*@__PURE__*/getDefaultExportFromCjs(srcExports);
+var parserExports = requireParser();
 
-export { index as default };
+/**
+ * Main action entry point
+ */
+async function run() {
+  try {
+    const changelogPath = coreExports.getInput('changelog-path') || 'CHANGELOG.md';
+    const versionInput = coreExports.getInput('version');
+
+    // Only pass version if explicitly specified, otherwise return all versions
+    const version = versionInput || null;
+
+    // Read changelog file
+    const fullPath = require$$1$5.resolve(process.cwd(), changelogPath);
+
+    if (!require$$1.existsSync(fullPath)) {
+      throw new Error(`Changelog file not found: ${fullPath}`)
+    }
+
+    const changelogContent = require$$1.readFileSync(fullPath, 'utf8');
+
+    // Parse changelog
+    const results = parserExports.parseChangelog(changelogContent, version);
+
+    if (results.length === 0) {
+      coreExports.warning(
+        `No changelog entries found${version ? ` for version ${version}` : ''}`
+      );
+    }
+
+    // Set output as JSON string
+    coreExports.setOutput('result', JSON.stringify(results));
+
+    // Log summary
+    coreExports.info(
+      `Parsed ${results.length} changelog ${results.length === 1 ? 'entry' : 'entries'}`
+    );
+    for (const entry of results) {
+      coreExports.info(
+        `  - Version ${entry.name}: ${Object.keys(entry.sections).length} sections`
+      );
+    }
+  } catch (error) {
+    coreExports.setFailed(error.message);
+  }
+}
+
+/**
+ * The entrypoint for the action. This file simply imports and runs the action's
+ * main logic.
+ */
+
+/* istanbul ignore next */
+run();
 //# sourceMappingURL=index.js.map
