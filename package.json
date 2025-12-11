@@ -15,9 +15,9 @@
     "prepublishOnly": "npm test",
     "prettier:fix": "npx prettier --write .",
     "prettier": "npx prettier --check .",
-    "release:major": "npm run version:major && npm publish --access public && git push --follow-tags",
-    "release:minor": "npm run version:minor && npm publish --access public && git push --follow-tags",
-    "release:patch": "npm run version:patch && npm publish --access public && git push --follow-tags",
+    "release:major": "npm version major && npm publish --access public && git push --follow-tags",
+    "release:minor": "npm version minor && npm publish --access public && git push --follow-tags",
+    "release:patch": "npm version patch && npm publish --access public && git push --follow-tags",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
   },
   "keywords": [
