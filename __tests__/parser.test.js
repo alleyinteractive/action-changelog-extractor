@@ -246,6 +246,169 @@ describe('parseChangelog', () => {
         'New projects should not pin a version'
       )
     })
+
+    test('unwraps text that is wrapped across multiple lines', () => {
+      const wrappedChangelog = `# Changelog
+
+## v1.2.0
+
+- Adjust taxonomy labels
+in the meta box to be more user friendly for taxonomies
+  without a label
+provided.
+- Sort meta
+keys alphabetically by default. Added filter
+  \`meta_inspector_sort_meta\` to
+disable this behavior.
+- Simple single line item.
+
+### Added
+
+- Add support for
+BuddyPress Activity Meta that spans
+  multiple lines with indentation
+  and continues here.
+- Another item that should remain
+  on one line.
+`
+
+      const results = parseChangelog(wrappedChangelog, '1.2.0')
+
+      // Check that wrapped text in general section gets unwrapped
+      expect(results[0].sections.general).toContain(
+        'Adjust taxonomy labels in the meta box to be more user friendly for taxonomies without a label provided.'
+      )
+      expect(results[0].sections.general).toContain(
+        'Sort meta keys alphabetically by default. Added filter `meta_inspector_sort_meta` to disable this behavior.'
+      )
+      expect(results[0].sections.general).toContain('Simple single line item.')
+
+      // Check that wrapped text in Added section gets unwrapped
+      expect(results[0].sections.added).toContain(
+        'Add support for BuddyPress Activity Meta that spans multiple lines with indentation and continues here.'
+      )
+      expect(results[0].sections.added).toContain(
+        'Another item that should remain on one line.'
+      )
+    })
+
+    test('preserves proper sentence boundaries while unwrapping hard-wrapped text', () => {
+      const mixedChangelog = `# Changelog
+
+## v1.0.0
+
+- This is a complete sentence.
+- Another complete sentence here.
+- But this line
+  should be joined because it flows naturally
+  across multiple lines with proper indentation.
+- Items with code \`should_not\` stay intact.
+
+### Fixed
+
+- Fixed issue where something happened.
+- Fixed another issue that spans
+  multiple lines and should
+  be unwrapped properly.
+`
+
+      const results = parseChangelog(mixedChangelog, '1.0.0')
+
+      // Should preserve complete sentences
+      expect(results[0].sections.general).toContain(
+        'This is a complete sentence.'
+      )
+      expect(results[0].sections.general).toContain(
+        'Another complete sentence here.'
+      )
+
+      // Should unwrap indented continuations
+      expect(results[0].sections.general).toContain(
+        'But this line should be joined because it flows naturally across multiple lines with proper indentation.'
+      )
+
+      // Should preserve code on same line
+      expect(results[0].sections.general).toContain(
+        'Items with code `should_not` stay intact.'
+      )
+
+      // Should unwrap in Fixed section
+      expect(results[0].sections.fixed).toContain(
+        'Fixed another issue that spans multiple lines and should be unwrapped properly.'
+      )
+    })
+
+    test('handles changelog with mixed wrapped and non-wrapped text', () => {
+      const mixedWrappingChangelog = `# Changelog
+
+## v1.5.0
+
+- This is a normal single line item that should stay as-is.
+- Update dependency package
+  to version 2.0 for better performance
+  and security improvements.
+- Fix bug in authentication system.
+- Refactor database connection logic
+for improved stability and error handling
+  to ensure reliable connections.
+- Add new feature for user management.
+
+### Added
+
+- New user dashboard with complete functionality.
+- Support for multiple authentication
+  providers including OAuth, SAML,
+  and traditional login methods.
+- Simple configuration option.
+
+### Changed
+
+- Updated API endpoints for better consistency.
+- Modified error handling
+  throughout the application to provide
+  more detailed feedback to users.
+- Cleaned up unused code.
+`
+
+      const results = parseChangelog(mixedWrappingChangelog, '1.5.0')
+
+      // Check general section - mix of wrapped and unwrapped
+      expect(results[0].sections.general).toContain(
+        'This is a normal single line item that should stay as-is.'
+      )
+      expect(results[0].sections.general).toContain(
+        'Update dependency package to version 2.0 for better performance and security improvements.'
+      )
+      expect(results[0].sections.general).toContain(
+        'Fix bug in authentication system.'
+      )
+      expect(results[0].sections.general).toContain(
+        'Refactor database connection logic for improved stability and error handling to ensure reliable connections.'
+      )
+      expect(results[0].sections.general).toContain(
+        'Add new feature for user management.'
+      )
+
+      // Check Added section - mix of wrapped and unwrapped
+      expect(results[0].sections.added).toContain(
+        'New user dashboard with complete functionality.'
+      )
+      expect(results[0].sections.added).toContain(
+        'Support for multiple authentication providers including OAuth, SAML, and traditional login methods.'
+      )
+      expect(results[0].sections.added).toContain(
+        'Simple configuration option.'
+      )
+
+      // Check Changed section - mix of wrapped and unwrapped
+      expect(results[0].sections.changed).toContain(
+        'Updated API endpoints for better consistency.'
+      )
+      expect(results[0].sections.changed).toContain(
+        'Modified error handling throughout the application to provide more detailed feedback to users.'
+      )
+      expect(results[0].sections.changed).toContain('Cleaned up unused code.')
+    })
   })
 
   describe('output structure', () => {

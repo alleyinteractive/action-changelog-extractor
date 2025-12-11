@@ -1,4 +1,84 @@
 /**
+ * Unwrap text that has been wrapped across multiple lines.
+ * This fixes changelog text that has been hard-wrapped for readability
+ * but should flow as continuous text.
+ *
+ * @param {string} text - The text content to unwrap
+ * @returns {string} The unwrapped text
+ */
+function unwrapText(text) {
+  const lines = text.split('\n')
+  const unwrappedLines = []
+
+  for (let i = 0; i < lines.length; i++) {
+    let currentLine = lines[i]
+
+    // Skip empty lines - preserve them as-is
+    if (currentLine.trim() === '') {
+      unwrappedLines.push(currentLine)
+      continue
+    }
+
+    // Collect continuation lines
+    let j = i + 1
+    while (j < lines.length) {
+      const nextLine = lines[j]
+
+      // Stop if next line is empty
+      if (nextLine.trim() === '') {
+        break
+      }
+
+      const trimmedCurrent = currentLine.trim()
+      const trimmedNext = nextLine.trim()
+
+      // Don't unwrap if current line looks like it ends a sentence/item
+      const endsWithPunctuation = /[.!?:;]$/.test(trimmedCurrent)
+      const endsWithCode = /`$/.test(trimmedCurrent)
+      const endsWithBullet = /[-*+]\s*$/.test(trimmedCurrent)
+
+      // Don't unwrap if next line starts a new bullet point, section, or sentence
+      const startsWithBullet = /^[-*+]\s/.test(trimmedNext)
+      const startsWithNumber = /^\d+\.\s/.test(trimmedNext)
+      const startsWithMarkdown = /^[#>]/.test(trimmedNext)
+
+      // More nuanced check for new sentences
+      const prevEndsWithContinuation =
+        /[,&]$/.test(trimmedCurrent) ||
+        /\b(and|or|but|with|for|to|from|in|on|at|by)$/.test(trimmedCurrent)
+      const startsWithCapitalNewSentence =
+        /^[A-Z]/.test(trimmedNext) &&
+        !prevEndsWithContinuation &&
+        endsWithPunctuation
+
+      // Determine if we should unwrap this line with the next
+      const shouldUnwrap =
+        !endsWithPunctuation &&
+        !endsWithCode &&
+        !endsWithBullet &&
+        !startsWithBullet &&
+        !startsWithNumber &&
+        !startsWithCapitalNewSentence &&
+        !startsWithMarkdown
+
+      if (shouldUnwrap) {
+        // Join the lines, preserving the original indentation of the first line
+        // but removing indentation from continuation lines
+        currentLine = currentLine + ' ' + trimmedNext
+        j++ // Move to next line
+      } else {
+        break // Stop unwrapping
+      }
+    }
+
+    unwrappedLines.push(currentLine)
+    i = j - 1 // Skip the lines we've consumed (j-1 because for loop will increment)
+  }
+
+  return unwrappedLines.join('\n')
+}
+
+/**
  * Parse a Keep a Changelog formatted changelog file.
  *
  * @param {string} changelogContent - The raw markdown content of the changelog
@@ -98,7 +178,9 @@ export function parseChangelog(changelogContent, version = null) {
 
       const content = currentSectionContent.join('\n')
       if (content.trim()) {
-        currentVersion.sections[currentSection] = content
+        // Unwrap any text that has been hard-wrapped across lines
+        const unwrappedContent = unwrapText(content)
+        currentVersion.sections[currentSection] = unwrappedContent
       }
     }
   }
@@ -120,7 +202,9 @@ export function parseChangelog(changelogContent, version = null) {
 
       const content = trimmedContent.join('\n')
       if (content.trim()) {
-        currentVersion.sections['general'] = content
+        // Unwrap any text that has been hard-wrapped across lines
+        const unwrappedContent = unwrapText(content)
+        currentVersion.sections['general'] = unwrappedContent
       }
       generalContent = []
     }
