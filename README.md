@@ -21,8 +21,6 @@ as both a **GitHub Action** and a **CLI tool**.
 
 #### Extract All Versions
 
-### Extract All Versions
-
 By default, the action returns all versions in the changelog:
 
 ```yaml
@@ -36,7 +34,7 @@ By default, the action returns all versions in the changelog:
     echo '${{ fromJson(steps.changelog.outputs.result)[0].contents }}'
 ```
 
-### Extract Specific Version
+#### Extract Specific Version
 
 ```yaml
 - name: Extract v1.14.0 Changelog
@@ -47,7 +45,7 @@ By default, the action returns all versions in the changelog:
     version: '1.14.0' # or 'v1.14.0'
 ```
 
-### Create Release from Latest Version
+#### Create Release from Latest Version
 
 ```yaml
 name: Release
@@ -139,6 +137,20 @@ Or install globally:
 ```bash
 npm install -g @alleyinteractive/changelog-extractor
 changelog-extractor
+```
+
+By default, the CLI outputs JSON to stdout. You can also specify other output
+formats using the `--format` option:
+
+```bash
+# JSON output (default)
+npx @alleyinteractive/changelog-extractor --format json
+
+# Pretty-printed dump
+npx @alleyinteractive/changelog-extractor --format dump
+
+# Plain text output
+npx @alleyinteractive/changelog-extractor --format text
 ```
 
 ## Supported Changelog Format

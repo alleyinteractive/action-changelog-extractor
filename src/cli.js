@@ -20,6 +20,7 @@ function printUsage() {
 Usage: npx @alleyinteractive/changelog-extractor [options]
 
 Options:
+  --format <type>       Output format (default: "json"). Options: dump, text, json.
   -f, --file <path>     Path to changelog file (default: CHANGELOG.md)
   -v, --version <ver>   Specific version to extract (e.g., "1.14.0" or "v1.14.0")
                         Leave empty to return all versions
@@ -64,6 +65,20 @@ if (versionIndex !== -1 && args[versionIndex + 1]) {
 
 const version = versionArg
 
+// Parse format option.
+let format = 'json'
+const formatIndex = args.findIndex((arg) => arg === '--format')
+if (formatIndex !== -1 && args[formatIndex + 1]) {
+  format = args[formatIndex + 1].toLowerCase()
+}
+
+if (!['json', 'dump', 'text'].includes(format)) {
+  console.error(
+    `❌ Error: Invalid format "${format}". Valid options are: json, dump, text.`
+  )
+  process.exit(1)
+}
+
 // Read changelog file
 const changelogPath = path.resolve(process.cwd(), changelogFile)
 
@@ -86,18 +101,28 @@ try {
     process.exit(0)
   }
 
+  // Default JSON output.
+  if (format === 'json') {
+    process.stdout.write(JSON.stringify(results, null, 2) + '\n')
+    process.exit(0)
+  }
+
   // Parse changelog
-  console.log(`📖 Parsing: ${changelogPath}`)
-  console.log(`🎯 Version: ${versionArg || 'all versions'}`)
-  console.log('')
+  if (format === 'dump') {
+    console.log(`📖 Parsing: ${changelogPath}`)
+    console.log(`🎯 Version: ${versionArg || 'all versions'}`)
+    console.log('')
+  }
 
   if (results.length === 0) {
     console.log('⚠️  No changelog entries found')
     process.exit(1)
   }
 
-  console.log(`✅ Found ${results.length} version(s)\n`)
-  console.log('─'.repeat(80))
+  if (format === 'dump') {
+    console.log(`✅ Found ${results.length} version(s)\n`)
+    console.log('─'.repeat(80))
+  }
 
   // Pretty print results
   results.forEach((entry, index) => {
@@ -126,10 +151,11 @@ try {
     }
   })
 
-  // Output JSON at the end
-  console.log('\n' + '═'.repeat(80))
-  console.log('\n📋 JSON Output:\n')
-  console.log(JSON.stringify(results, null, 2))
+  if (format === 'dump') {
+    console.log('\n' + '═'.repeat(80))
+    console.log('\n📋 JSON Output:\n')
+    process.stdout.write(JSON.stringify(results, null, 2) + '\n')
+  }
 } catch (error) {
   console.error('❌ Error parsing changelog:', error.message)
   process.exit(1)
