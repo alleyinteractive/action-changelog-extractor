@@ -555,4 +555,59 @@ for improved stability and error handling
       )
     })
   })
+
+  describe('Alternate version headings', () => {
+    const datedChangelog = `# Changelog
+
+## 2026-10-16
+
+### Added
+
+- Journeys.
+
+## 2026-10-09
+
+### Fixed
+
+- A bug.
+`
+
+    const bracketedChangelog = `# Changelog
+
+## [Unreleased]
+
+## [1.1.0] - 2026-10-16
+
+### Added
+
+- Something.
+
+## [1.0.0]
+
+### Fixed
+
+- Something else.
+`
+
+    test('parses date headings', () => {
+      const results = parseChangelog(datedChangelog)
+
+      expect(results.map((v) => v.name)).toEqual(['2026-10-16', '2026-10-09'])
+      expect(results[0].sections.added).toBe('- Journeys.')
+    })
+
+    test('extracts a specific date version', () => {
+      const results = parseChangelog(datedChangelog, '2026-10-09')
+
+      expect(results).toHaveLength(1)
+      expect(results[0].sections.fixed).toBe('- A bug.')
+    })
+
+    test('parses bracketed Keep a Changelog headings', () => {
+      const results = parseChangelog(bracketedChangelog)
+
+      expect(results.map((v) => v.name)).toEqual(['1.1.0', '1.0.0'])
+      expect(results[0].sections.added).toBe('- Something.')
+    })
+  })
 })
