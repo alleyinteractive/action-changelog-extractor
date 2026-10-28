@@ -27342,8 +27342,9 @@ function parseChangelog(changelogContent, version = null) {
   let currentSectionContent = [];
   let generalContent = []; // Content without section headers
 
-  // Regex to match version headers: ## v1.14.0 or ## v1.14.0 - 2024-04-29
-  const versionRegex = /^##\s+v?(\d+\.\d+\.\d+(?:-[^\s]+)?)\s*(?:-\s*(.*))?$/;
+  // Regex to match version headers: ## v1.14.0, ## [1.14.0] - 2024-04-29, or ## 2024-04-29
+  const versionRegex =
+    /^##\s+\[?v?(\d+\.\d+\.\d+(?:-[^\s\]]+)?|\d{4}-\d{2}-\d{2})\]?\s*(?:-\s*(.*))?$/;
   // Regex to match section headers: ### Added, ### Changed, etc.
   const sectionRegex = /^###\s+(.+)$/;
 
